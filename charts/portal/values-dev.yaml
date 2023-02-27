@@ -427,9 +427,9 @@ postgresql:
   enabled: false
 
 externalDatabase:
-  host: "portal-backend-postgresql-external-db"
+  host: "ftcpro-postgresql-primary.postgres"
   # -- Database name
-  database: "ftcpro-postgresql-primary.postgres"
+  database: "portal_latest"
   # -- Database port number
   port: 5432
   # -- Secret containing the passwords non-root usernames portal and provisioning.
