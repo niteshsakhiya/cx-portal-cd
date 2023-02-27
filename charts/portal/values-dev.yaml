@@ -39,17 +39,17 @@ frontend:
   portal:
     name: "portal"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-frontend"
+      name: "ghcr.io/catenax-ng/tx-portal-frontend"
       portaltag: 1.0.0
   registration:
     name: "registration"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-frontend-registration"
+      name: "ghcr.io/catenax-ng/tx-portal-frontend-registration"
       registrationtag: 1.0.0
   assets:
     name: "assets"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-assets"
+      name: "ghcr.io/catenax-ng/tx-portal-assets"
       assetstag: 1.0.0
     path: "/assets"
   centralidpAuthPath: "/auth"
@@ -162,7 +162,7 @@ backend:
   registration:
     name: "registration-service"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_registration-service"
+      name: "ghcr.io/catenax-ng/tx-portal-backend_registration-service"
       registrationservicetag: v1.0.0
     logging:
       registrationServiceBpn: "Information"
@@ -179,7 +179,7 @@ backend:
   administration:
     name: "administration-service"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_administration-service"
+      name: "ghcr.io/catenax-ng/tx-portal-backend_administration-service"
       administrationservicetag: v1.0.0
     logging:
       businessLogic: "Information"
@@ -258,13 +258,13 @@ backend:
     service:
       name: "provisioning-service"
       image:
-        name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_provisioning-service"
+        name: "ghcr.io/catenax-ng/tx-portal-backend_provisioning-service"
         provisioningservicetag: v1.0.0
       swaggerEnabled: true
   appmarketplace:
     name: "marketplace-app-service"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_marketplace-app-service"
+      name: "ghcr.io/catenax-ng/tx-portal-backend_marketplace-app-service"
       appmarketplaceservicetag: v1.0.0
     logging:
       offersLibrary: "Information"
@@ -314,25 +314,25 @@ backend:
   portalmigrations:
     name: "portal-migrations"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_portal-migrations"
+      name: "ghcr.io/catenax-ng/tx-portal-backend_portal-migrations"
       portalmigrationstag: 8428dbe3d4fe9a344ea5d0adb178e6807d9fa78c
     seeding:
       testDataEnvironments: ""
   portalmaintenance:
     name: "portal-maintenance"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_maintenance-service"
+      name: "ghcr.io/catenax-ng/tx-portal-backend_maintenance-service"
       portalmaintenancetag: v1.0.0
   notification:
     name: "notification-service"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_notification-service"
+      name: "ghcr.io/catenax-ng/tx-portal-backend_notification-service"
       notificationservicetag: v1.0.0
     swaggerEnabled: true
   services:
     name: "services-service"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_services-service"
+      name: "ghcr.io/catenax-ng/tx-portal-backend_services-service"
       servicesservicetag: v1.0.0
     logging:
       offersLibrary: "Information"
@@ -362,12 +362,12 @@ backend:
   provisioningmigrations:
     name: "provisioning-migrations"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_provisioning-migrations"
+      name: "ghcr.io/catenax-ng/tx-portal-backend_provisioning-migrations"
       provisioningmigrationstag: v1.0.0
   checklistworker:
     name: "checklist-worker"
     image:
-      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_checklist-worker"
+      name: "ghcr.io/catenax-ng/tx-portal-backend_checklist-worker"
       checklistworkertag: v1.0.0
     logging:
       checklistLibrary: "Information"
