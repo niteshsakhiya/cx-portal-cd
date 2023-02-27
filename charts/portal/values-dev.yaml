@@ -1,0 +1,446 @@
+# -- Provide portal base address.
+portalAddress: "https://portal.dev.demo.ftcpro.co"
+
+# -- Provide portal-backend base address.
+portalBackendAddress: "https://portal-backend.dev.demo.ftcpro.co"
+
+# -- Provide centralidp base address (CX IAM), without trailing '/auth'.
+centralidpAddress: "https://centralidp.dev.demo.ftcpro.co"
+
+# -- Provide sharedidp address (CX IAM), without trailing '/auth'.
+sharedidpAddress: "https://sharedidp.dev.demo.ftcpro.co"
+
+# -- Provide semantics base address.
+semanticsAddress: "https://semantics.dev.demo.ftcpro.co"
+
+# -- Provide daps base address
+dapsAddress: "https://daps.dev.demo.ftcpro.co"
+
+# -- Provide bpdm partners pool base address.
+bpdmPartnersPoolAddress: "https://partners-pool.dev.demo.ftcpro.co"
+
+# -- Provide bpdm portal gate base address.
+bpdmPortalGateAddress: "https://portal-gate.dev.demo.ftcpro.co"
+
+# -- Provide custodian base address.
+custodianAddress: "https://managed-identity-wallets.dev.demo.ftcpro.co"
+
+# -- Provide sdfactory base address.
+sdfactoryAddress: "https://sdfactory.dev.demo.ftcpro.co"
+
+# -- Provide clearinghouse base address.
+clearinghouseAddress: "https://validation.dev.demo.ftcpro.co"
+# -- Provide clearinghouse token address.
+clearinghouseTokenAddress: "https://keycloak.dev.demo.ftcpro.co/realms/example/protocol/openid-connect/token"
+
+frontend:
+  ingress:
+    enabled: false
+  portal:
+    name: "portal"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-frontend"
+      portaltag: 1.0.0
+  registration:
+    name: "registration"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-frontend-registration"
+      registrationtag: 1.0.0
+  assets:
+    name: "assets"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-assets"
+      assetstag: 1.0.0
+    path: "/assets"
+  centralidpAuthPath: "/auth"
+  bpdmPartnersPoolApiPath: "/api"
+
+backend:
+  ingress:
+  # -- Portal-backend ingress parameters,
+    # enable ingress record generation for portal-backend.
+    enabled: true
+    name: "portal-backend"
+    annotations:
+      cert-manager.io/cluster-issuer: "letsencrypt-prod"
+      kubernetes.io/ingress.class: "nginx"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+      # -- Provide CORS allowed origin.
+      nginx.ingress.kubernetes.io/cors-allow-origin: "https://*.dev.demo.ftcpro.co"
+    tls:
+      # -- Provide tls secret.
+      - secretName: "portal-backend-tls"
+        # -- Provide host for tls secret.
+        hosts:
+          - "portal-backend.dev.demo.ftcpro.co"
+    hosts:
+      # -- Provide default path for the ingress record.
+      - host: "portal-backend.dev.demo.ftcpro.co"
+        paths:
+          - path: "/api/registration"
+            pathType: "Prefix"
+            backend:
+              service: "registration-service"
+              port: 8080
+          - path: "/api/administration"
+            pathType: "Prefix"
+            backend:
+              service: "administration-service"
+              port: 8080
+          - path: "/api/notification"
+            pathType: "Prefix"
+            backend:
+              service: "notification-service"
+              port: 8080
+          - path: "/api/provisioning"
+            pathType: "Prefix"
+            backend:
+              service: "provisioning-service"
+              port: 8080
+          - path: "/api/apps"
+            pathType: "Prefix"
+            backend:
+              service: "marketplace-app-service"
+              port: 8080
+          - path: "/api/services"
+            pathType: "Prefix"
+            backend:
+              service: "services-service"
+              port: 8080
+  dbConnection:
+    schema: "portal"
+    sslMode: "Disable"
+  portalHomePath: "/home"
+  userManagementPath: "/usermanagement"
+  keycloak:
+    # -- Secret containing the database-password and the client-secret for the connection to the centralidp (CX IAM) and the client-secret for the connection to the sharedidp (CX-IAM).
+    secret: "secret-backend-keycloak"
+    central:
+      # -- Provide centralidp client-id from CX IAM centralidp.
+      clientId: "sa-cl1-reg-2"
+      # -- Client-secret for centralidp client-id. Secret-key 'central-client-secret'.
+      clientSecret: "<path:portal/data/dev/portal-backend#centralidp-secret>"
+      authRealm: "CX-Central"
+      jwtBearerOptions:
+        metadataPath: "/auth/realms/CX-Central/.well-known/openid-configuration"
+        tokenValidationParameters:
+          validIssuerPath: "/auth/realms/CX-Central"
+          validAudiencePortal: "Cl2-CX-Portal"
+          validAudienceRegistration: "Cl1-CX-Registration"
+      tokenPath: "/auth/realms/CX-Central/protocol/openid-connect/token"
+      dbConnection:
+        host: "ftcpro-postgresql-primary.postgres"
+        port: 5432
+        user: "<path:portal/data/dev/iam/centralidp-keycloak#postgres-user>"
+        database: "<path:portal/data/dev/iam/centralidp-keycloak#postgres-database-name>"
+        # -- Password for the kccentral username. Secret-key 'central-db-password'.
+        password: "<path:portal/data/dev/iam/centralidp-keycloak#postgres-password>"
+        schema: "public"
+        sslMode: "Disable"
+    shared:
+      # -- Provide sharedidp client-id from CX IAM sharedidp.
+      clientId: "sa-cl1-reg-1"
+      # -- Client-secret for sharedidp client-id. Secret-key 'shared-client-secret'.
+      clientSecret: "<path:portal/data/dev/portal-backend#sharedidp-secret>"
+      authRealm: "master"
+  mailing:
+    # -- Secret containing the passwords for backend.mailing and backend.provisioning.sharedRealm.
+    secret: "secret-backend-mailing"
+    # -- Provide host.
+    host: "<path:portal/data/dev/smtp#host>"
+    # -- Provide port.
+    port: "587"
+    # -- Provide user.
+    user: "<path:portal/data/dev/smtp#user>"
+    # -- Password for the smtp username. Secret-key 'password'.
+    password: "<path:portal/data/dev/smtp#password>"
+  interfaces:
+    # -- Secret containing the client-secrets for the connection to daps, custodian, bpdm, sdFactory and clearinghouse.
+    secret: "secret-backend-interfaces"
+  registration:
+    name: "registration-service"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_registration-service"
+      registrationservicetag: v1.0.0
+    logging:
+      registrationServiceBpn: "Information"
+    portalRegistrationPath: "/registration"
+    keycloakClientId: "Cl1-CX-Registration"
+    applicationStatusIds:
+      status0: "SUBMITTED"
+      status1: "DECLINED"
+      status2: "CONFIRMED"
+    documentTypeIds:
+      type0: "CX_FRAME_CONTRACT"
+      type1: "COMMERCIAL_REGISTER_EXTRACT"
+    swaggerEnabled: true
+  administration:
+    name: "administration-service"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_administration-service"
+      administrationservicetag: v1.0.0
+    logging:
+      businessLogic: "Information"
+      sdfactoryLibrary: "Information"
+    connectors:
+      validCertificationContentTypes:
+        type0: "application/x-pem-file"
+        type1: "application/x-x509-ca-cert"
+        type2: "application/pkix-cert"
+        type3: "application/octet-stream"
+      selfDescriptionDocumentPath: /api/administration/documents/selfDescription
+    keycloakClientId: "Cl2-CX-Portal"
+    daps:
+      apiPath: "/api/v1/daps"
+      scope: "openid"
+      grantType: "client_credentials"
+      # -- Provide daps client-id from CX IAM centralidp.
+      clientId: "daps-client-id"
+      # -- Client-secret for daps client-id. Secret-key 'daps-client-secret'.
+      clientSecret: ""
+    identityProviderAdmin:
+      csvSettings:
+        fileName: "identityproviderlinks.csv"
+        contentType: "text/csv"
+        charset: "UTF-8"
+        separator: ","
+        headerUserId: "UserId"
+        headerFirstName: "FirstName"
+        headerLastName: "LastName"
+        headerEmail: "Email"
+        headerProviderAlias: "ProviderAlias"
+        headerProviderUserId: "ProviderUserId"
+        headerProviderUserName: "ProviderUserName"
+    invitation:
+      invitedUserInitialRoles:
+        role0: "Company Admin"
+    registration:
+      partnerUserInitialRoles:
+        role0: "Company Admin"
+      documentTypeIds:
+        type0: "COMMERCIAL_REGISTER_EXTRACT"
+    userManagement:
+      companyUserStatusIds:
+        status0: "ACTIVE"
+        status1: "INACTIVE"
+    serviceAccount:
+      clientId: "technical_roles_management"
+    swaggerEnabled: true
+  provisioning:
+    centralRealm: "CX-Central"
+    centralRealmId: "CX-Central"
+    invitedUserInitialRoles:
+      registration: "Company Admin"
+    serviceAccountClientPrefix: "sa"
+    centralIdentityProvider:
+      clientId: "central-idp"
+    sharedRealmClient:
+      clientId: "central-idp"
+    sharedRealm:
+      smtpServer:
+        # -- Provide host.
+        host: "<path:portal/data/dev/smtp#host>"
+        # -- Provide port.
+        port: "587"
+        # -- Provide user.
+        user: "<path:portal/data/dev/smtp#user>"
+        # -- Password for the smtp username. Secret-key 'provisioning-sharedrealm-password'.
+        password: <path:portal/data/dev/smtp#password>"
+        ssl: ""
+        startTls: "true"
+        auth: "true"
+        # -- Provide from.
+        from: "smtp@dev.demo.ftcpro.co"
+        # -- Provide replyTo.
+        replyTo: "smtp@dev.demo.ftcpro.co"
+    service:
+      name: "provisioning-service"
+      image:
+        name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_provisioning-service"
+        provisioningservicetag: v1.0.0
+      swaggerEnabled: true
+  appmarketplace:
+    name: "marketplace-app-service"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_marketplace-app-service"
+      appmarketplaceservicetag: v1.0.0
+    logging:
+      offersLibrary: "Information"
+    appOverviewPath: "/appoverview"
+    catenaAdminRoles:
+      role0: "CX Admin"
+    serviceAccountRoles:
+      role0: "App Tech User"
+    salesManagerRoles:
+      role0: "Sales Manager"
+    serviceManagerRoles:
+      role0: "App Manager"
+    activeAppCompanyAdminRoles:
+      role0: "IT Admin"
+      role1: "Company Admin"
+    approveAppUserRoles:
+      role0: "Sales Manager"
+      role1: "Service Manager"
+    ITAdminRoles:
+      role0: "IT Admin"
+    documentTypeIds:
+      type0: "APP_CONTRACT"
+      type1: "APP_DATA_DETAILS"
+      type2: "ADDITIONAL_DETAILS"
+      type3: "APP_TECHNICAL_INFORMATION"
+      type4: "APP_LEADIMAGE"
+      type5: "APP_IMAGE"
+    contentTypeSettings:
+      setting0: "application/pdf"
+      setting1: "image/jpeg"
+      setting2: "image/png"
+    notificationTypeIds:
+      type0: "APP_RELEASE_REQUEST"
+    activeAppNotificationTypeIds:
+      type0: "APP_ROLE_ADDED"
+    submitAppNotificationTypeIds:
+      type0: "APP_RELEASE_REQUEST"
+    approveAppNotificationTypeIds:
+      type0: "APP_RELEASE_APPROVAL"
+    appImageDocumentTypeIds:
+      type0: "APP_LEADIMAGE"
+      type1: "APP_IMAGE"
+    offerStatusIds:
+      status0: "IN_REVIEW"
+      status1: "ACTIVE"
+    swaggerEnabled: true
+  portalmigrations:
+    name: "portal-migrations"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_portal-migrations"
+      portalmigrationstag: 8428dbe3d4fe9a344ea5d0adb178e6807d9fa78c
+    seeding:
+      testDataEnvironments: ""
+  portalmaintenance:
+    name: "portal-maintenance"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_maintenance-service"
+      portalmaintenancetag: v1.0.0
+  notification:
+    name: "notification-service"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_notification-service"
+      notificationservicetag: v1.0.0
+    swaggerEnabled: true
+  services:
+    name: "services-service"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_services-service"
+      servicesservicetag: v1.0.0
+    logging:
+      offersLibrary: "Information"
+    serviceMarketplacePath: "/servicemarketplace"
+    catenaAdminRoles:
+      role0: "CX Admin"
+    serviceAccountRoles:
+      role0: "App Tech User"
+    salesManagerRoles:
+      role0: "Sales Manager"
+    serviceManagerRoles:
+      role0: "Service Manager"
+    approveServiceUserRoles:
+      role0: "Sales Manager"
+      role1: "Service Manager"
+    ITAdminRoles:
+      role0: "IT Admin"
+    documentTypeIds:
+      type0: "ADDITIONAL_DETAILS"
+    contentTypeSettings:
+      setting0: "application/pdf"
+    submitServiceNotificationTypeIds:
+      type0: "SERVICE_RELEASE_REQUEST"
+    approveServiceNotificationTypeIds:
+      type0: "SERVICE_RELEASE_APPROVAL"
+    swaggerEnabled: false
+  provisioningmigrations:
+    name: "provisioning-migrations"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_provisioning-migrations"
+      provisioningmigrationstag: v1.0.0
+  checklistworker:
+    name: "checklist-worker"
+    image:
+      name: "ghcr.io/cofinity-x/cofinity-x-portal-backend_checklist-worker"
+      checklistworkertag: v1.0.0
+    logging:
+      checklistLibrary: "Information"
+      bpdmLibrary: "Information"
+      clearinghouseLibrary: "Information"
+      custodianLibrary: "Information"
+      sdfactoryLibrary: "Information"
+    applicationActivation:
+      applicationApprovalInitialRoles:
+        portal:
+          role0: "Company Admin"
+        registration:
+          role0: "Company Admin"
+      clientToRemoveRolesOnActivation:
+        client0: "Cl1-CX-Registration"
+      welcomeNotificationTypeIds:
+        type0: "WELCOME"
+        type1: "WELCOME_USE_CASES"
+        type2: "WELCOME_SERVICE_PROVIDER"
+        type3: "WELCOME_CONNECTOR_REGISTRATION"
+        type4: "WELCOME_APP_MARKETPLACE"
+    bpdm:
+      scope: "openid"
+      grantType: "client_credentials"
+      # -- Provide bpdm client-id from CX IAM centralidp.
+      clientId: "bpdm-client-id"
+      # -- Client-secret for bpdm client-id. Secret-key 'bpdm-client-secret'.
+      clientSecret: ""
+    custodian:
+      scope: "openid"
+      grantType: "client_credentials"
+      # -- Provide custodian client-id from CX IAM centralidp.
+      clientId: "Sa-cl5-custodian-1"
+      # -- Client-secret for custodian client-id. Secret-key 'custodian-client-secret'.
+      clientSecret: "<path:portal/data/dev/portal-backend#custodian-secret>"
+    sdfactory:
+      selfdescriptionPath: "/api/rel3/selfdescription"
+      scope: "openid"
+      grantType: "client_credentials"
+      # -- Provide BPN for sdfactory.
+      issuerBpn: "BPNDUMMY000DUMMY"
+      # -- Provide sdfactory client-id from CX IAM centralidp.
+      clientId: "sdfactory-client-id"
+      # -- Client-secret for sdfactory client-id. Secret-key 'sdfactory-client-secret'.
+      clientSecret: ""
+    clearinghouse:
+      scope: "openid"
+      grantType: "client_credentials"
+      # -- Provide clearinghouse client-id from clearinghouse IAM.
+      clientId: "clearinghouse-client-id"
+      # -- Client-secret for clearinghouse client-id. Secret-key 'clearinghouse-client-secret'.
+      clientSecret: ""
+      callbackPath: "/api/administration/registration/clearinghouse"
+  placeholder: "empty"
+
+postgresql:
+  enabled: false
+
+externalDatabase:
+  host: "portal-backend-postgresql-external-db"
+  # -- Database name
+  database: "ftcpro-postgresql-primary.postgres"
+  # -- Database port number
+  port: 5432
+  # -- Secret containing the passwords non-root usernames portal and provisioning.
+  secret: "secret-postgres-external-db"
+  # -- Non-root username for portal.
+  portalUser: "portal"
+  # -- Non-root username for provisioning.
+  provisioningUser: "provisioning"
+  # -- Password for the non-root username 'portal'. Secret-key 'portal-password'.
+  portalPassword: "<path:portal/data/dev/portal-backend#postgres-password>"
+  # -- Password for the non-root username 'provisioning'. Secret-key 'provisioning-password'.
+  provisioningPassword: "<path:portal/data/dev/portal-backend#postgres-password>"
+
+replicaCount: 1
